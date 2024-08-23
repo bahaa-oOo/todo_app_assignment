@@ -34,36 +34,38 @@ class _AddBottomSheetState extends State<AddBottomSheet> {
     return Container(
       height: MediaQuery.of(context).size.height * .4,
       padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text(
-            "Add new task",
-            textAlign: TextAlign.center,
-            style: AppStyle.bottomSheetTitle,
-          ),
-          TextField(
-            decoration: InputDecoration(hintText: "Enter task title"),
-            controller: titleController,
-          ),
-          const SizedBox(
-            height: 12,
-          ),
-          TextField(
-            decoration: InputDecoration(hintText: "Enter task description"),
-            controller: descriptionController,
-          ),
-          const SizedBox(
-            height: 12,
-          ),
-          Text(
-            "Select date",
-            style: AppStyle.bottomSheetTitle.copyWith(fontSize: 16),
-          ),
-          const SizedBox(
-            height: 12,
-          ),
-          InkWell(
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,  // Adjust size to fit content
+          children: [
+            const Text(
+              "Add new task",
+              textAlign: TextAlign.center,
+              style: AppStyle.bottomSheetTitle,
+            ),
+            TextField(
+              decoration: InputDecoration(hintText: "Enter task title"),
+              controller: titleController,
+            ),
+            const SizedBox(
+              height: 12,
+            ),
+            TextField(
+              decoration: InputDecoration(hintText: "Enter task description"),
+              controller: descriptionController,
+            ),
+            const SizedBox(
+              height: 12,
+            ),
+            Text(
+              "Select date",
+              style: AppStyle.bottomSheetTitle.copyWith(fontSize: 16),
+            ),
+            const SizedBox(
+              height: 12,
+            ),
+            InkWell(
               onTap: () {
                 showMyDatePicker();
               },
@@ -71,17 +73,22 @@ class _AddBottomSheetState extends State<AddBottomSheet> {
                 selectedDate.toFormattedDate,
                 style: AppStyle.normalGreyTextStyle,
                 textAlign: TextAlign.center,
-              )),
-          const Spacer(),
-          ElevatedButton(
+              ),
+            ),
+            const SizedBox(height: 12),  // Add spacing before the button
+            ElevatedButton(
               onPressed: () {
                 addTodoToFireStore();
               },
-              child: const Text("Add"))
-        ],
+              child: const Text("Add"),
+            ),
+          ],
+        ),
       ),
     );
   }
+
+
 
   void addTodoToFireStore() {
     CollectionReference todosCollection = FirebaseFirestore.instance
