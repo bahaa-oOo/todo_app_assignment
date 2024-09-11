@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:todo_app/ui/utils/app_colors.dart';
 import '../../../../../model/todo_dm.dart';
 import '../../../../../model/user_dm.dart';
 
