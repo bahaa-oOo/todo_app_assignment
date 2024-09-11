@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:todo_app/ui/utils/app_colors.dart';
 import '../../../../../model/todo_dm.dart';
 import '../../../../../model/user_dm.dart';
 
@@ -30,39 +31,64 @@ class _EditTaskPageState extends State<EditTaskPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Edit Task"),
+        centerTitle: false,
+        title: Text("To Do List", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+        elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: titleController,
-              decoration: InputDecoration(labelText: "Title"),
-            ),
-            TextField(
-              controller: descriptionController,
-              decoration: InputDecoration(labelText: "Description"),
-            ),
-            SizedBox(height: 20),
-            Text("Select time:"),
-            TextButton(
-              onPressed: _selectTime,
-              child: Text(
-                "${selectedTime.day}-${selectedTime.month}-${selectedTime.year}",
-                style: TextStyle(color: Colors.grey),
+      body: Stack(
+        children: [
+          Container(
+            color: Color(0xff5d9cec),
+            height: MediaQuery.of(context).size.height * .1,
+          ),
+          Align(
+            alignment: Alignment.center,
+            child: Container(
+              alignment: Alignment.center,
+              margin: EdgeInsets.only(bottom: 80),
+              height: MediaQuery.of(context).size.height * 0.72,
+              width: MediaQuery.of(context).size.width * 0.8,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    Text("Edit Task", style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold)),
+                    SizedBox(height: 20),
+                    TextField(
+                      controller: titleController,
+                      decoration: InputDecoration(labelText: "Title"),
+                    ),
+                    SizedBox(height: 10),
+                    TextField(
+                      controller: descriptionController,
+                      decoration: InputDecoration(labelText: "Description"),
+                    ),
+                    SizedBox(height: 20),
+                    Text("Select time:"),
+                    TextButton(
+                      onPressed: _selectTime,
+                      child: Text(
+                        "${selectedTime.day}-${selectedTime.month}-${selectedTime.year}",
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                    Spacer(),
+                    isLoading
+                        ? CircularProgressIndicator()
+                        : ElevatedButton(
+                      onPressed: _saveChanges,
+                      child: Text("Save Changes"),
+                    ),
+                  ],
+                ),
               ),
             ),
-            Spacer(),
-            isLoading
-                ? CircularProgressIndicator() // مؤشر تحميل عند الحفظ
-                : ElevatedButton(
-              onPressed: _saveChanges,
-              child: Text("Save Changes"),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -86,7 +112,6 @@ class _EditTaskPageState extends State<EditTaskPage> {
       isLoading = true;
     });
 
-    // تحديث البيانات في Firestore
     FirebaseFirestore.instance
         .collection(UserDM.collectionName)
         .doc(UserDM.currentUser!.id)
@@ -98,7 +123,6 @@ class _EditTaskPageState extends State<EditTaskPage> {
       'date': Timestamp.fromDate(selectedTime), // تحويل DateTime إلى Timestamp
       'isDone': widget.item.isDone,
     }).then((_) {
-      // تحديث الكائن محليًا بعد التحديث في Firestore
       setState(() {
         widget.item.title = titleController.text;
         widget.item.description = descriptionController.text;
