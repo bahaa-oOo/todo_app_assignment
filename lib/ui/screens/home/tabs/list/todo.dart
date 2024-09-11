@@ -1,9 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:todo_app/model/todo_dm.dart';
 import 'package:todo_app/ui/utils/app_colors.dart';
 import 'package:todo_app/ui/utils/app_style.dart';
 import 'package:todo_app/model/user_dm.dart';
+
+
+import 'edit_task_page.dart'; // تأكد من الاستيراد الصحيح
 
 class Todo extends StatefulWidget {
   final TodoDM item;
@@ -17,8 +21,6 @@ class Todo extends StatefulWidget {
 
 class _TodoState extends State<Todo> {
   late bool isDone;
-  double _dragExtent = 0.0;
-  bool _isDragged = false;
 
   @override
   void initState() {
@@ -28,86 +30,59 @@ class _TodoState extends State<Todo> {
 
   @override
   Widget build(BuildContext context) {
-    double maxDrag = MediaQuery.of(context).size.width * 0.25;
-
-    return GestureDetector(
-      onHorizontalDragUpdate: (details) {
-        setState(() {
-          _dragExtent = (_dragExtent + details.primaryDelta!).clamp(0.0, maxDrag);
-        });
-      },
-      onHorizontalDragEnd: (details) {
-        setState(() {
-          if (_dragExtent >= maxDrag) {
-            _isDragged = true;
-          } else {
-            _dragExtent = 0.0;
-            _isDragged = false;
-          }
-        });
-      },
-      child: Stack(
+    return Slidable(
+      key: ValueKey(widget.item.id),
+      startActionPane: ActionPane(
+        motion: const BehindMotion(),
+        extentRatio: 0.25, // غطاء مساحة أقل للمسح
         children: [
-          // زر الحذف الذي يظهر عند السحب
-          Positioned.fill(
-            child: Container(
-              margin: EdgeInsets.symmetric(vertical: 22, horizontal: 26),
-              decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(22),
-              ),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Padding(
-                  padding: EdgeInsets.only(left: 30.0),
-                  child: InkWell(
-                    onTap: _performDelete, // تأكد من استدعاء الدالة عند الضغط
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.delete, color: Colors.white),
-                        SizedBox(height: 8),
-                        Text(
-                          'Delete',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Container الخاص بالمهمة الذي يتم سحبه لليمين
-          AnimatedContainer(
-            duration: Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            transform: Matrix4.translationValues(
-                _isDragged ? maxDrag : _dragExtent, 0, 0),
-            child: Container(
-              width: MediaQuery.of(context).size.width - 52,
-              height: MediaQuery.of(context).size.height * .13,
-              decoration: BoxDecoration(
-                color: isDone ? Colors.green.shade100 : Colors.white,
-                borderRadius: BorderRadius.circular(22),
-              ),
-              margin: EdgeInsets.symmetric(vertical: 22, horizontal: 26),
-              padding: EdgeInsets.symmetric(horizontal: 18, vertical: 20),
-              child: Row(
-                children: [
-                  buildVerticalLine(context),
-                  SizedBox(width: 25),
-                  buildTodoInfo(),
-                  buildTodoState(),
-                ],
-              ),
+          SlidableAction(
+            onPressed: (context) => _performDelete(),
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+            icon: Icons.delete,
+            label: 'delete',
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(15),
+              bottomLeft: Radius.circular(15),
             ),
           ),
         ],
+      ),
+      endActionPane: ActionPane(
+        motion: const BehindMotion(),
+        extentRatio: 0.25, // غطاء مساحة أقل للمسح
+        children: [
+          SlidableAction(
+            onPressed: (context) => _navigateToEditTaskPage(),
+            backgroundColor: Colors.teal,
+            foregroundColor: Colors.white,
+            icon: Icons.edit,
+            label: 'Edit',
+            borderRadius: BorderRadius.only(
+              topRight: Radius.circular(15),
+              bottomRight: Radius.circular(15),
+            ),
+          ),
+        ],
+      ),
+      child: Container(
+        width: MediaQuery.of(context).size.width - 40, // تباعد من الحواف
+        height: 140,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        decoration: BoxDecoration(
+          color: isDone ? Colors.green.shade100 : Colors.white,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+        child: Row(
+          children: [
+            buildVerticalLine(context),
+            const SizedBox(width: 25),
+            buildTodoInfo(),
+            buildTodoState(),
+          ],
+        ),
       ),
     );
   }
@@ -142,19 +117,19 @@ class _TodoState extends State<Todo> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Spacer(),
+        const Spacer(),
         Text(
           widget.item.title,
           maxLines: 1,
           style: AppStyle.bottomSheetTitle.copyWith(
               color: isDone ? Colors.green : AppColors.primary),
         ),
-        Spacer(),
+        const Spacer(),
         Text(
           widget.item.description,
           style: AppStyle.bodyTextStyle,
         ),
-        Spacer(),
+        const Spacer(),
       ],
     ),
   );
@@ -171,10 +146,10 @@ class _TodoState extends State<Todo> {
         color: isDone ? Colors.transparent : AppColors.primary,
         borderRadius: BorderRadius.circular(16),
       ),
-      padding: EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
       child: isDone
-          ? Icon(Icons.done, color: Colors.green, size: 35)
-          : Icon(Icons.done, color: Colors.white, size: 35),
+          ? const Icon(Icons.done, color: Colors.green, size: 35)
+          : const Icon(Icons.done, color: Colors.white, size: 35),
     ),
   );
 
@@ -189,5 +164,14 @@ class _TodoState extends State<Todo> {
     }).catchError((error) {
       print('Error updating task state: $error');
     });
+  }
+
+  void _navigateToEditTaskPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditTaskPage(item: widget.item),
+      ),
+    );
   }
 }

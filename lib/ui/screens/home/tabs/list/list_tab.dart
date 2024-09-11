@@ -18,13 +18,6 @@ class ListTab extends StatefulWidget {
 
 class ListTabState extends State<ListTab> {
   DateTime selectedCalendarDate = DateTime.now();
-  List<TodoDM> todosList = [];
-
-  @override
-  void initState() {
-    super.initState();
-    getTodosListFromFireStore();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,43 +26,56 @@ class ListTabState extends State<ListTab> {
         buildCalendar(),
         Expanded(
           flex: 75,
-          child: ListView.builder(
-              itemCount: todosList.length,
-              itemBuilder: (context, index) {
-                return Todo(
-                  item: todosList[index],
-                  onDelete: () {
-                    setState(() {
-                      todosList.removeAt(index); // حذف العنصر من القائمة
-                    });
-                    // إذا كنت ترغب في حذف العنصر من Firestore أيضًا، يمكنك إضافة الكود هنا
-                    deleteTodoFromFirestore(todosList[index].id);
-                  },
-                );
-              }),
+          child: StreamBuilder<QuerySnapshot>(
+            stream: getTodosStreamFromFireStore(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(child: Text('حدث خطأ أثناء تحميل البيانات'));
+              }
+
+              List<TodoDM> todosList = snapshot.data!.docs.map((doc) {
+                Map<String, dynamic> json = doc.data() as Map<String, dynamic>;
+                return TodoDM.fromJson(json);
+              }).toList();
+
+              // فلترة المهام بناءً على التاريخ المحدد
+              todosList = todosList.where((todo) =>
+              todo.date.year == selectedCalendarDate.year &&
+                  todo.date.month == selectedCalendarDate.month &&
+                  todo.date.day == selectedCalendarDate.day).toList();
+
+              if (todosList.isEmpty) {
+                return Center(child: Text('لا توجد مهام لهذا اليوم'));
+              }
+
+              return ListView.builder(
+                itemCount: todosList.length,
+                itemBuilder: (context, index) {
+                  return Todo(
+                    item: todosList[index],
+                    onDelete: () {
+                      deleteTodoFromFirestore(todosList[index].id);
+                    },
+                  );
+                },
+              );
+            },
+          ),
         ),
       ],
     );
   }
 
-  void getTodosListFromFireStore() async {
-    CollectionReference todoCollection = FirebaseFirestore.instance
+  // الحصول على Stream من Firestore
+  Stream<QuerySnapshot> getTodosStreamFromFireStore() {
+    return FirebaseFirestore.instance
         .collection(UserDM.collectionName)
         .doc(UserDM.currentUser!.id)
-        .collection(TodoDM.collectionName);
-    QuerySnapshot querySnapshot = await todoCollection.get();
-    List<QueryDocumentSnapshot> documents = querySnapshot.docs;
-    todosList = documents.map((doc) {
-      Map<String, dynamic> json = doc.data() as Map<String, dynamic>;
-      return TodoDM.fromJson(json);
-    }).toList();
-    todosList = todosList
-        .where((todo) =>
-    todo.date.year == selectedCalendarDate.year &&
-        todo.date.month == selectedCalendarDate.month &&
-        todo.date.day == selectedCalendarDate.day)
-        .toList();
-    setState(() {});
+        .collection(TodoDM.collectionName)
+        .snapshots();
   }
 
   buildCalendar() {
@@ -96,8 +102,9 @@ class ListTabState extends State<ListTab> {
             itemBuilder: (context, date, isSelected, onDateTapped) {
               return InkWell(
                 onTap: () {
-                  selectedCalendarDate = date;
-                  getTodosListFromFireStore();
+                  setState(() {
+                    selectedCalendarDate = date;
+                  });
                 },
                 child: Container(
                   decoration: BoxDecoration(

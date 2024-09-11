@@ -16,8 +16,8 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   int currentIndex = 0;
-  GlobalKey<ListTabState> listTabKey = GlobalKey();
-  List<Widget> tabs = [];
+  final GlobalKey<ListTabState> listTabKey = GlobalKey();
+  late List<Widget> tabs;
 
   @override
   void initState() {
@@ -44,32 +44,34 @@ class _HomeState extends State<Home> {
   }
 
   Widget buildBottomNavigation() => BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 12,
-        clipBehavior: Clip.hardEdge,
-        child: BottomNavigationBar(
-            showSelectedLabels: false,
-            showUnselectedLabels: false,
-            currentIndex: currentIndex,
-            onTap: (tappedIndex) {
-              currentIndex = tappedIndex;
-              setState(() {});
-            },
-            items: const [
-              BottomNavigationBarItem(icon: Icon(Icons.list), label: "List"),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.settings), label: "Settings"),
-            ]),
-      );
-
-  buildFab() => FloatingActionButton(
-        onPressed: () async {
-          await AddBottomSheet.show(context);
-          listTabKey.currentState?.getTodosListFromFireStore();
+    shape: const CircularNotchedRectangle(),
+    notchMargin: 12,
+    clipBehavior: Clip.hardEdge,
+    child: BottomNavigationBar(
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        currentIndex: currentIndex,
+        onTap: (tappedIndex) {
+          setState(() {
+            currentIndex = tappedIndex;
+          });
         },
-        backgroundColor: AppColors.primary,
-        shape: const StadiumBorder(
-            side: BorderSide(color: AppColors.white, width: 3)),
-        child: const Icon(Icons.add),
-      );
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.list), label: "List"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.settings), label: "Settings"),
+        ]),
+  );
+
+  Widget buildFab() => FloatingActionButton(
+    onPressed: () async {
+      await AddBottomSheet.show(context);
+      // لا حاجة لاستدعاء getTodosListFromFireStore هنا بعد استخدام StreamBuilder
+      // listTabKey.currentState?.getTodosListFromFireStore();
+    },
+    backgroundColor: AppColors.primary,
+    shape: const StadiumBorder(
+        side: BorderSide(color: AppColors.white, width: 3)),
+    child: const Icon(Icons.add),
+  );
 }
